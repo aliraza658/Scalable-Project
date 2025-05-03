@@ -1,46 +1,43 @@
-'use client'
-import { createContext, useState, useEffect, useContext } from 'react'
-import axios from 'axios'
-import { useRouter } from 'next/router';
+'use client';
+import { createContext, useState, useContext, useEffect } from 'react';
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [token, setToken] = useState(null)
-  const [loading, setLoading] = useState(true)
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
-  const login = async (credentials) => {
-    const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, credentials)
-    setToken(res.data.token)
-    setUser(res.data.user)
-    localStorage.setItem('token', res.data.token)
-  }
+  // Optional: Load from localStorage on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    if (storedUser && storedToken) {
+      setUser(JSON.parse(storedUser));
+      setToken(storedToken);
+    }
+  }, []);
+
+  const login = (userData, token) => {
+    setUser(userData);
+    setToken(token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', token);
+  };
 
   const logout = () => {
-    setToken(null)
-    setUser(null)
-    localStorage.removeItem('token')
-  }
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token')
-    if (storedToken) {
-      setToken(storedToken)
-      axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/memessage`, {
-        headers: { Authorization: `Bearer ${storedToken}` }
-      })
-        .then(res => setUser(res.data))
-        .catch(() => logout())
-    }
-    setLoading(false)
-  }, [])
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+  };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
-export const useAuth = () => useContext(AuthContext)
+export function useAuth() {
+  return useContext(AuthContext);
+}

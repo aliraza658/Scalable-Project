@@ -1,23 +1,26 @@
-'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { loginUser } from '@/lib/auth'
-import { Mail, Lock } from 'lucide-react'
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { loginUser } from '../../lib/auth';
+import { Mail, Lock } from 'lucide-react'; // Assuming you're using lucide icons
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("ali@test.com")
-  const [password, setPassword] = useState('test123')
-  const router = useRouter()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      await loginUser({ email, password })
-      router.push('/')
+      const data = await loginUser({ email, password });
+      login(data.user, data.token);
+      router.push('/');
     } catch (err) {
-      alert('Login failed')
+      alert('Login failed');
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
@@ -58,5 +61,5 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }

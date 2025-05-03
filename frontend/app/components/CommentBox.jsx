@@ -1,15 +1,12 @@
-'use client'
+'use client';
 import { useState } from 'react';
 
-export default function CommentBox({ photoId }) {
+export default function CommentBox({ photoId, onCommentAdded }) {
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  const handleCommentChange = (e) => setComment(e.target.value);
-  const handleRatingChange = (e) => setRating(e.target.value);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,18 +29,19 @@ export default function CommentBox({ photoId }) {
         body: JSON.stringify({
           photoId,
           comment,
-          rating: parseInt(rating), // Make sure rating is an integer
+          rating: parseInt(rating),
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit comment');
-      }
+      if (!response.ok) throw new Error('Failed to submit comment');
 
-      const result = await response.json();
       setSuccess('Comment submitted successfully!');
       setComment('');
       setRating('');
+
+      if (onCommentAdded) {
+        onCommentAdded(); // ✅ Call to refresh comments
+      }
     } catch (err) {
       setError('Error submitting comment: ' + err.message);
     } finally {
@@ -57,7 +55,7 @@ export default function CommentBox({ photoId }) {
         className="w-full p-2 border rounded mb-2"
         placeholder="Leave a comment..."
         value={comment}
-        onChange={handleCommentChange}
+        onChange={(e) => setComment(e.target.value)}
       ></textarea>
 
       <input
@@ -67,7 +65,7 @@ export default function CommentBox({ photoId }) {
         className="w-full p-2 border rounded mb-2"
         placeholder="Rate 1-5"
         value={rating}
-        onChange={handleRatingChange}
+        onChange={(e) => setRating(e.target.value)}
       />
 
       <button

@@ -4,9 +4,9 @@ const { client, databaseName } = require('../config/cosmosClient');
 const usersContainer = client.database(databaseName).container('users');
 
 exports.signup = async (req, res) => {
-  const { username, email, password } = req.body;
-
-  if (!username || !email || !password) return res.status(400).json({ message: 'All fields are required' });
+  const { email, password, role } = req.body;
+  
+  if ( !email || !password || !role ) return res.status(400).json({ message: 'All fields are required' });
 
   try {
     // Check if email already exists
@@ -22,9 +22,9 @@ exports.signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = {
       id: Date.now().toString(),
-      username,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role
     };
 
     await usersContainer.items.create(user);
@@ -55,7 +55,7 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+    res.json({ token, user: { id: user.id, role: user.role, email: user.email } });
   } catch (err) {
     res.status(500).json({ message: 'Error logging in', error: err.message });
   }

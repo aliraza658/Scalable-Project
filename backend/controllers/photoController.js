@@ -80,15 +80,25 @@ exports.getPhotoById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { resource: photo } = await mediaContainer.item(id, id).read();
-    if (!photo) {
+    const querySpec = {
+      query: 'SELECT * FROM c WHERE c.id = @id',
+      parameters: [
+        { name: '@id', value: id }
+      ]
+    };
+
+    const { resources: photos } = await mediaContainer.items.query(querySpec).fetchAll();
+
+    if (photos.length === 0) {
       return res.status(404).json({ message: 'Photo not found' });
     }
-    res.json(photo);
+
+    res.json(photos[0]);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching photo', error: err.message });
   }
 };
+
 
 exports.addComment = async (req, res) => {
   const { id } = req.params;
